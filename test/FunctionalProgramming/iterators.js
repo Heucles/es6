@@ -169,6 +169,7 @@ describe('Iterable', function () {
     done();
   });
 
+  //Yield caracterize a generator
   it('Showing the lazy and functional aspects of iterator ', function (done) {
 
     class Company {
@@ -216,7 +217,7 @@ describe('Iterable', function () {
     let company = new Company();
     company.addEmployees('Tim', 'Sue', 'Joy', 'Tom');
 
-    for (let employee of take(filter(company, e=>e[0]==='T'),1)) {
+    for (let employee of take(filter(company, e=> e[0] === 'T'), 1)) {
       count += 1;
     }
 
@@ -225,4 +226,53 @@ describe('Iterable', function () {
     done();
   });
 
+  it('Can take a parameter from next(param)', function (done) {
+
+    let range = function* (start, end) {
+      let current = start;
+      while (current <= end) {
+        let delta = yield current; 
+        // over this statement is where you will receive the value that was passed into next, if it doesn´t was passed
+        // it will be undefined, and as you can´t pass it when you call next for the first time, it will come as it is shown bellow.
+        current += delta || 1;
+      }
+    }
+    
+    // low level simulation of the implementation of range
+    let range2 = function (start, end) {
+      let current = start;
+      let first = true;
+      return {
+        next(delta = 1) {
+
+          let result = { value: undefined, done: true };
+
+          if (!first) {
+            current += delta;
+          }
+
+          if (current <= end) {
+            result.value = current;
+            result.done = false;
+          }
+
+          first = false;
+          return result;
+        }
+      }
+    }
+
+    let result = [];
+    let iterator = range2(1, 10);
+    let next = iterator.next(); // here you can not pass a parameter
+    
+    while (!next.done) {
+      result.push(next.value);
+      next = iterator.next(2);
+    }
+
+    expect(result).to.eql([1, 3, 5, 7, 9]);
+    done();
+
+  });
 });
